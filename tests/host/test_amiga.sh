@@ -56,6 +56,10 @@ cc -std=c99 -O1 -Wall -DCON_TEST_PREFIX -I"$CUR" -c "$ROOT/tests/host/con_test.c
 cc -std=c99 -O1 -Wall -D_DEFAULT_SOURCE -I"$CUR" -c "$ROOT/tests/host/con_script.c" -o "$T/obj/con_script.o"
 c++ -o "$T/pq2" "$T"/obj/*.o -lz
 ok
+# the Amiga has no random device: the game as built for it must not open one
+if nm -C "$T/obj/game-game.o" | grep -q 'random_device'; then
+    no "the Amiga build uses std::random_device (aborts there)"
+else ok; fi
 
 G="$T/game"
 mkdir -p "$G"

@@ -29,7 +29,8 @@ extern "C" {
 // for C++'s exceptions and the game's state
 unsigned long __stack = 256 * 1024;
 }
-static const char version[] = "$VER: ProgressQuest2 2025.0 (16.11.2026)";
+static const char version[] __attribute__((used)) =
+    "$VER: ProgressQuest2 2025.0 (16.11.2026)";
 static BPTR old_dir, user_dir;
 
 static void restore_dir() {
