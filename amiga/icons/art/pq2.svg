@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Progress Quest 2 GlowIcon art: a sword over a filling progress bar, the RPG that plays itself. The AmiCradle Team. -->
+  <defs>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3fe07a"/>
+      <stop offset="1" stop-color="#0f8a3a"/>
+    </linearGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#8a9ab8"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3550"/>
+      <stop offset="1" stop-color="#121826"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="10" width="116" height="110" rx="6" fill="url(#bg)" stroke="#0a0c12" stroke-width="3"/>
+  <path d="M64 14 L72 22 L72 70 L56 70 L56 22 Z" fill="url(#blade)" stroke="#2a3040" stroke-width="2"/>
+  <rect x="42" y="70" width="44" height="8" rx="2" fill="#d8a020" stroke="#5a3c06" stroke-width="2"/>
+  <rect x="59" y="78" width="10" height="14" fill="#7a4a1a" stroke="#3a2008" stroke-width="2"/>
+  <rect x="16" y="98" width="96" height="14" rx="3" fill="#0a0e18" stroke="#8090b0" stroke-width="2"/>
+  <rect x="19" y="101" width="62" height="8" rx="1" fill="url(#bar)"/>
+  <text x="94" y="109" font-family="monospace" font-weight="bold" font-size="9" fill="#e0e6f0">65%</text>
+</svg>

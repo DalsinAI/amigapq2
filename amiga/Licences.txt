@@ -1,0 +1,15 @@
+Progress Quest 2: licences
+==========================
+
+The game: pq2 by Nick Bollom, a remake of Eric Fredricksen's Progress
+Quest, https://github.com/nbollom/pq2.
+
+- The program is under the GNU General Public Licence, version 3
+  (COPYING.txt). It is built with nlohmann/json 3.11.3 (MIT, Niels
+  Lohmann) and zlib (the zlib licence, Jean-loup Gailly and Mark Adler).
+- The Amiga port's own files: amiga/amiga_start.cpp and amiga/patches are
+  under the GNU GPL version 3, like the game; amiga/curses (the console
+  curses), tests/, package/ and tools/ are MIT. The GlowIcon art is The
+  AmiCradle Team's own.
+- The source the program is built from: upstream at the commit named in
+  ReadMe, with this repository's amiga/patches.

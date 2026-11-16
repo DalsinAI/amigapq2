@@ -1,0 +1,92 @@
+# Progress Quest 2 for GFOS (AmigaOS 3.2 with GFOpenUp), 68040/68060: a
+# console game, built soft float with the stove's fpuauto (the FPU is used
+# when the Amiga has one).
+#
+#   make -f amiga/Makefile.amigaos -j4 PQ=/path/to/pq2 JSON=/path/to/json [STOVE=...]
+#
+# PQ is upstream at the commit package/pq2.lock names, with amiga/patches
+# applied, JSON nlohmann/json at its locked commit (header only:
+# single_include/); package/build-amiga.sh fetches both. STOVE is a
+# GFOpenAmigaGCC 16.2.0-open6 stove (prefix/ has the compilers, the NDK,
+# and zlib in m68k-amigaos/port-deps). Upstream's ncurses interface draws
+# on amiga/curses, a small curses on the Amiga console;
+# amiga/amiga_start.cpp starts the game in its User drawer.
+#
+# Output: build/amigaos/ProgressQuest2/ (the drawer: ProgressQuest2,
+# ReadMe, the licence, User/, with GlowIcons), build/amigaos/
+# ProgressQuest2.info and Install-ProgressQuest2 beside them.
+
+PQ      ?= ../pq2
+JSON    ?= ../json
+STOVE   ?= $(HOME)/AmiCradle/stoves/os32-gcc16-open6
+PREFIX  ?= $(STOVE)/prefix
+DEPS    ?= $(PREFIX)/m68k-amigaos/port-deps
+CC      = $(PREFIX)/bin/m68k-amigaos-gcc
+CXX     = $(PREFIX)/bin/m68k-amigaos-g++
+CPU     ?= -m68040 -msoft-float
+# -fno-tree-loop-distribute-patterns: GCC 16's loop miscompile.
+OPT     ?= -Os -fomit-frame-pointer -fno-tree-loop-distribute-patterns
+
+INC      = -Iamiga/curses -I$(PQ)/game -I$(PQ)/utils -I$(PQ)/gui \
+           -I$(PQ)/ncurses -I$(JSON)/single_include -I$(DEPS)/include
+CFLAGS   = -noixemul $(OPT) $(CPU) -std=gnu99 -Iamiga/curses -Wall
+CXXFLAGS = -noixemul $(OPT) $(CPU) -std=gnu++23 -D__amigaos__ \
+           -DNCURSES_ENABLED $(INC)
+LDFLAGS  = -noixemul $(CPU) -s -Wl,--gc-sections
+# zlib for the saved games; the stove's libstdc++ and libgcc are built
+# with threads
+LIBS     = -L$(DEPS)/lib -lz -lpthread -latomic
+
+BUILD   = build/amigaos
+OBJDIR  = $(BUILD)/obj
+OUT     = $(BUILD)/ProgressQuest2
+PROG    = ProgressQuest2
+
+SRCS    = $(wildcard $(PQ)/game/*.cpp $(PQ)/utils/*.cpp $(PQ)/gui/*.cpp \
+                     $(PQ)/ncurses/*.cpp)
+OBJS    = $(patsubst $(PQ)/%.cpp,$(OBJDIR)/pq/%.o,$(SRCS)) \
+          $(OBJDIR)/pq/main.o $(OBJDIR)/amiga_start.o \
+          $(OBJDIR)/curses.o $(OBJDIR)/con_amiga.o
+
+all: $(OUT)/$(PROG) package
+
+$(OUT)/$(PROG): $(OBJS)
+	@mkdir -p $(OUT)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+# upstream's main() is pq2_main: amiga/amiga_start.cpp runs first
+$(OBJDIR)/pq/main.o: $(PQ)/main.cpp amiga/curses/curses.h
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -w -Dmain=pq2_main -c -o $@ $<
+
+$(OBJDIR)/pq/%.o: $(PQ)/%.cpp amiga/curses/curses.h
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -w -c -o $@ $<
+
+$(OBJDIR)/amiga_start.o: amiga/amiga_start.cpp amiga/curses/curses.h
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -Wall -c -o $@ $<
+
+$(OBJDIR)/%.o: amiga/curses/%.c $(wildcard amiga/curses/*.h)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+package: $(OUT)/$(PROG) AMIGA_PORT.md amiga/Licences.txt
+	mkdir -p $(OUT)/User
+	cp AMIGA_PORT.md $(OUT)/ReadMe
+	cp $(PQ)/README.md $(OUT)/ReadMe-pq2
+	cp $(PQ)/LICENSE $(OUT)/COPYING.txt
+	cp amiga/Licences.txt $(OUT)/Licences.txt
+	cp amiga/icons/ProgressQuest2.info amiga/icons/ReadMe.info $(OUT)/
+	for f in ReadMe-pq2 COPYING.txt Licences.txt; do \
+	    cp amiga/icons/ReadMe.info $(OUT)/$$f.info; done
+	cp amiga/icons/Data.info $(OUT)/User.info
+	cp amiga/icons/ProgressQuest2-drawer.info $(BUILD)/ProgressQuest2.info
+	cp amiga/Install-ProgressQuest2 amiga/Install-ProgressQuest2.info $(BUILD)/
+
+objs: $(OBJS)
+
+clean:
+	rm -rf build/amigaos
+
+.PHONY: all package objs clean

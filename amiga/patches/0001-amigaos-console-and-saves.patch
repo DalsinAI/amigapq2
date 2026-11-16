@@ -1,0 +1,119 @@
+diff --git a/game/game.cpp b/game/game.cpp
+index 94967ed..bacac90 100644
+--- a/game/game.cpp
++++ b/game/game.cpp
+@@ -94,7 +94,7 @@ Game::Game(): character() {
+     game_state = GameStateNone;
+ }
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__amigaos__) // AmigaOS has no SIGQUIT or SIGKILL
+ void Game::SetDaemonMode() {
+     const function<void(int)> term_callback = [this](int){
+         Close();
+diff --git a/game/game.hpp b/game/game.hpp
+index b30c8dc..3d205b8 100644
+--- a/game/game.hpp
++++ b/game/game.hpp
+@@ -37,7 +37,7 @@ private:
+ 
+ public:
+     Game();
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__amigaos__) // AmigaOS has no SIGQUIT or SIGKILL
+     void SetDaemonMode();
+ #endif
+     file::LoadError LoadGame(const std::string& filename_path);
+diff --git a/ncurses/gamescreen.cpp b/ncurses/gamescreen.cpp
+index 3d97737..29344cc 100644
+--- a/ncurses/gamescreen.cpp
++++ b/ncurses/gamescreen.cpp
+@@ -21,9 +21,20 @@ void GameScreen::ShowProgress(const int line, const T progress_current, const T
+     const float progress = base_progress * max_progress;
+     const int full_progress = static_cast<int>(progress / characters.size());
+     const int remaining_progress = static_cast<int>(progress) % static_cast<int>(characters.size());
++#ifdef __amigaos__
++    // the Amiga console's fonts have no block characters: the bar is drawn
++    // in ASCII, a '#' for each full cell and a '+' for one half full or more
++    std::string progress_str(full_progress, '#');
++    if (remaining_progress >= static_cast<int>(characters.size()) / 2) {
++        progress_str += '+';
++    }
++    mvwaddch(win, line, LEFT, '|');
++    mvwprintw(win, line, LEFT, "%s", progress_str.c_str());
++#else
+     const auto progress_str = std::wstring(full_progress, 0x2588) + characters[remaining_progress];
+     mvwprintw(win, line, LEFT, "%lc", 0x258F);
+     mvwprintw(win, line, LEFT, "%ls", progress_str.c_str());
++#endif
+     if (show_progress_labels) {
+         CenterAlign(win, std::to_string(static_cast<int>(std::round(base_progress * 100))) + "%", 40, line);
+     }
+diff --git a/ncurses/loadscreen.cpp b/ncurses/loadscreen.cpp
+index 91b7fac..a04dbd5 100644
+--- a/ncurses/loadscreen.cpp
++++ b/ncurses/loadscreen.cpp
+@@ -14,6 +14,22 @@ LoadScreen::LoadScreen(const std::shared_ptr<Game> &game, const MessageHandler &
+ 
+ void LoadScreen::ChangeDir(const std::filesystem::path &new_path) {
+     current_index = 0;
++#ifdef __amigaos__
++    // AmigaOS names (Work:Games/ProgressQuest2/User) are not POSIX paths, so
++    // the C++ library cannot go up from them or make them absolute: the
++    // saved games are listed from the current directory, the User drawer
++    // the game starts in (amiga/amiga_start.cpp), with no other drawers.
++    (void) new_path;
++    path = ".";
++    files.clear();
++    for (auto &entry: std::filesystem::directory_iterator(path)) {
++        if (!entry.is_directory() && entry.path().extension() == ".pq2") {
++            files.push_back(entry.path().filename());
++        }
++    }
++    std::sort(files.begin(), files.end());
++    return;
++#endif
+     if (new_path == "..") {
+         path = path.parent_path();
+     }
+@@ -115,12 +131,21 @@ void LoadScreen::HandleKey(const int key) {
+             ClearPopup();
+         }
+         else {
++#ifdef __amigaos__
++            if (files.empty()) {
++                return; // no saved games in the User drawer
++            }
++#endif
+             const auto &file = files[current_index];
+             if (is_directory(file)) {
+                 ChangeDir(file);
+             }
+             else {
++#ifdef __amigaos__
++                if (game->LoadGame(file.string()) == file::LoadErrorNone) {
++#else
+                 if (game->LoadGame(absolute(file).string()) == file::LoadErrorNone) {
++#endif
+                     message_handler("load");
+                 }
+                 else {
+diff --git a/ncurses/ncursesview.cpp b/ncurses/ncursesview.cpp
+index 0a8ec90..6dab891 100644
+--- a/ncurses/ncursesview.cpp
++++ b/ncurses/ncursesview.cpp
+@@ -90,7 +90,14 @@ void NCursesView::Resize(const int new_screen_width, const int new_screen_height
+ }
+ 
+ void NCursesView::Update() {
++#ifdef __amigaos__
++    // wclear also clears the whole console window before the next refresh:
++    // ten times a second, it flickers. werase leaves the drawing by
++    // difference to curses.
++    werase(win);
++#else
+     wclear(win);
++#endif
+     if (screen_width < required_width || screen_height < required_height) {
+         wprintw(win, "Progress Quest 2 requires a terminal of at least 80x24");
+     }

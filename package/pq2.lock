@@ -1,0 +1,10 @@
+# The upstream Progress Quest 2 the port builds, and the JSON library it
+# reads and writes its saved games with (header only): fetched at these
+# commits by package/build-amiga.sh, never kept in this repository.
+PQ_URL=https://github.com/nbollom/pq2
+PQ_COMMIT=62416beb54f48d4d9aa66b55e436287f12491285
+PQ_VERSION=2025.0
+JSON_URL=https://github.com/nlohmann/json
+JSON_COMMIT=9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03
+JSON_VERSION=3.11.3
+PORT_VERSION=2025.0-gfos1
