@@ -32,7 +32,10 @@ INC      = -Iamiga/curses -I$(PQ)/game -I$(PQ)/utils -I$(PQ)/gui \
 CFLAGS   = -noixemul $(OPT) $(CPU) -std=gnu99 -Iamiga/curses -Wall
 CXXFLAGS = -noixemul $(OPT) $(CPU) -std=gnu++23 -D__amigaos__ \
            -DNCURSES_ENABLED $(INC)
-LDFLAGS  = -noixemul $(CPU) -s -Wl,--gc-sections
+# no --gc-sections: it drops the stove's floating point set-up, and the
+# first float operation then crashes (libnix starts main() over, lab
+# t3-olui18-os323, 16 Nov 2026)
+LDFLAGS  = -noixemul $(CPU) -s
 # zlib for the saved games; the stove's libstdc++ and libgcc are built
 # with threads
 LIBS     = -L$(DEPS)/lib -lz -lpthread -latomic
