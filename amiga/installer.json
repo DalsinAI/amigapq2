@@ -1,0 +1,16 @@
+{
+  "name": "Progress Quest 2",
+  "version": "2025.0-gfos1",
+  "drawer": "ProgressQuest2",
+  "program": "ProgressQuest2",
+  "cpu": "68040",
+  "fpu": false,
+  "space": 2500000,
+  "modules": [],
+  "keep": [
+    "User"
+  ],
+  "parent": "Work:Games",
+  "badge": "icons/art/pq2.png",
+  "script": "Install-ProgressQuest2"
+}
